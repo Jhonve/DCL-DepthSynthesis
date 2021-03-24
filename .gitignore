@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Temp files and folders
-.h5
+*.h5
 checkpoints/
 runs/
 validations/
