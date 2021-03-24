@@ -128,5 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Temp Files
+# Temp files and folders
 .h5
+checkpoints/
+runs/
+validations/
