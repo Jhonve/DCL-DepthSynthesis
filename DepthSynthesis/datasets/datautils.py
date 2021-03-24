@@ -105,15 +105,8 @@ class DepthDataset(data.Dataset):
             depth_img = cv2.resize(depth_img, (int(depth_img.shape[1] / self.opt.zoom_out_scale), int(depth_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_NEAREST)
         depth_img = np.array(depth_img).astype(np.float32)
 
-        if self.opt.noise_depth_min != None:
-            depth_img[depth_img < self.opt.noise_depth_min] = 0
-
-        if self.opt.noise_depth_max != None:
-            depth_img = depth_img / self.opt.noise_depth_max
-            depth_img = np.clip(depth_img, 0, 1)
-        else:
-            depth_max = np.max(depth_img)
-            depth_img = depth_img / depth_max
+        depth_max = np.max(depth_img)
+        depth_img = depth_img / depth_max
 
         if self.opt.zoom_out_scale != 1 or rgb_img.shape[0] != depth_img.shape[0]:
             rgb_img = cv2.resize(rgb_img, (depth_img.shape[1], depth_img.shape[0]), interpolation=cv2.INTER_AREA)
@@ -136,15 +129,8 @@ class DepthDataset(data.Dataset):
             depth_img = cv2.resize(depth_img, (int(depth_img.shape[1] / self.opt.zoom_out_scale), int(depth_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_NEAREST)
         depth_img = np.array(depth_img).astype(np.float32)
         
-        if self.opt.noise_depth_min != None:
-                depth_img[depth_img < self.opt.noise_depth_min] = 0
-
-        if self.opt.noise_depth_max != None:
-            depth_img = depth_img / self.opt.noise_depth_max
-            depth_img = np.clip(depth_img, 0, 1)
-        else:
-            depth_max = np.max(depth_img)
-            depth_img = depth_img / depth_max
+        depth_max = np.max(depth_img)
+        depth_img = depth_img / depth_max
 
         depth_img = np.expand_dims(depth_img, 2)
         depth_img = depth_img.transpose(2, 0, 1)

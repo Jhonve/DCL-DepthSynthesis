@@ -1,3 +1,4 @@
+# Generate synthesised depth
 import os
 import math
 import time

@@ -13,6 +13,8 @@ class TestOptions(BaseOptions):
         # Dropout and Batchnorm has different behavioir during training and test.
         parser.add_argument('--eval', action='store_false', help='use eval mode during test time.')
 
+        parser.add_argument('--eval_dir', type=str, default='./datasets/eval_depth/')
+
         parser.add_argument('--is_write', type=bool, default=True, help='whether to write results')
         parser.add_argument('--test_dir', type=str, default="../../TestRes/ImageTasks/", help='where to save results')
 

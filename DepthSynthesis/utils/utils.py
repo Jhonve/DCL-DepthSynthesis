@@ -1,14 +1,7 @@
-"""This module contains simple helper functions """
-from __future__ import print_function
 import torch
 import numpy as np
-from PIL import Image
 import os
 import random
-import importlib
-import argparse
-from argparse import Namespace
-import torchvision
 
 class ImagePool():
     """This class implements an image buffer that stores previously generated images.
