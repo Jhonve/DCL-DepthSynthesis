@@ -47,8 +47,6 @@ class DCLModel(BaseModel):
     def __init__(self, opt):
         BaseModel.__init__(self, opt)
 
-        # specify the training losses you want to print out.
-        # The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['G_GAN', 'D_real', 'D_fake', 'G', 'NCE']
         self.visual_names = ['real_A', 'fake_B']
         self.nce_layers = [int(i) for i in self.opt.nce_layers.split(',')]
@@ -64,13 +62,8 @@ class DCLModel(BaseModel):
             self.loss_names += ['idt']
             self.visual_names += ['idt_B']
 
-        if hasattr(opt, 'is_sim_vis'):
-            self.visual_names += ['sim_maps_input', 'sim_maps_output']
-
         if self.isTrain:
             self.model_names = ['G', 'F', 'D']
-        elif hasattr(self.opt, 'is_sim_vis'):
-            self.model_names = ['G', 'F']
         else:  # during test time, only load G
             self.model_names = ['G']
 
@@ -114,19 +107,6 @@ class DCLModel(BaseModel):
             if self.opt.lambda_NCE > 0.0:
                 self.optimizer_F = torch.optim.Adam(self.netF.parameters(), lr=self.opt.lr, betas=(self.opt.beta1, self.opt.beta2))
                 self.optimizers.append(self.optimizer_F)
-        
-    def data_dependent_initialize_sim_vis(self, data):
-        """
-        The feature network netF is defined in terms of the shape of the intermediate, extracted
-        features of the encoder portion of netG. Because of this, the weights of netF are
-        initialized at the first feedforward pass with some input images.
-        Please also see PatchSampleF.create_mlp(), which is called at the first forward() call.
-        """
-        self.set_test_input(data)
-        bs_per_gpu = self.real_A.size(0) // max(len(self.opt.gpu_ids), 1)
-        temp_real_A = self.real_A[:bs_per_gpu]
-        feat_q = self.netG(temp_real_A, self.nce_layers, encode_only=True)
-        _ = self.netF(feat_q)
 
     def optimize_parameters(self):
         # forward
@@ -173,12 +153,6 @@ class DCLModel(BaseModel):
         if (self.opt.nce_idt or self.opt.lambda_idt > 0.0) and self.isTrain:
             self.idt_B = self.fake[self.real_A.size(0):]
 
-        if hasattr(self.opt, 'is_sim_vis'):
-            feat_i = self.netG(self.real, self.nce_layers, encode_only=True)
-            self.sim_maps_input = self.netF(feat_i, self.opt.query_index)
-            feat_o = self.netG(self.fake, self.nce_layers, encode_only=True)
-            self.sim_maps_output = self.netF(feat_o, self.opt.query_index)
-
     def compute_D_loss(self):
         """Calculate GAN loss for the discriminator"""
         fake = self.fake_B.detach()
@@ -211,10 +185,11 @@ class DCLModel(BaseModel):
         if self.opt.lambda_NCE > 0.0:
             self.loss_NCE = self.calculate_NCE_loss(self.real_A, self.fake_B)
         else:
-            self.loss_NCE, self.loss_NCE_bd = 0.0, 0.0
+            self.loss_NCE = 0.0, 0.0
 
         if self.opt.nce_idt and self.opt.lambda_NCE > 0.0:
             self.loss_NCE_Y = self.calculate_NCE_loss(self.real_B, self.idt_B)
+            loss_NCE_both = (self.loss_NCE + self.loss_NCE_Y) * 0.5
         else:
             loss_NCE_both = self.loss_NCE
 

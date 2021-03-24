@@ -16,51 +16,6 @@ from models import create_model
 
 from tensorboardX import SummaryWriter
 
-def splitData(num_val_batch, batch_size, data_path_A, data_path_B, validation_file):
-    if data_path_A.shape[0] < data_path_B.shape[0]:
-        num_data = data_path_A.shape[0]
-    else:
-        num_data = data_path_B.shape[0]
-
-    num_val_data = num_val_batch * batch_size
-    num_train_data = num_data - num_val_data
-
-    val_index = random.sample(range(0, num_data), num_val_data)
-    train_index = list(set(range(0, num_data)) - set(val_index))
-
-    num_train_batch = int(len(train_index) / batch_size)
-
-    train_path_A = data_path_A[train_index]
-    train_path_B = data_path_B[train_index]
-
-    val_path_A = data_path_A[val_index]
-    val_path_B = data_path_B[val_index]
-
-    val_index = np.array(val_index)
-    np.save(validation_file, val_index)
-
-    return train_path_A, train_path_B, val_path_A, val_path_B, num_train_batch
-
-def resplitData(batch_size, data_path_A, data_path_B, validation_file):
-    if data_path_A.shape[0] < data_path_B.shape[0]:
-        num_data = data_path_A.shape[0]
-    else:
-        num_data = data_path_B.shape[0]
-
-    val_index = np.load(validation_file)
-    val_index = list(val_index)
-    train_index = list(set(range(0, num_data)) - set(val_index))
-
-    num_train_batch = int(len(train_index) / batch_size)
-
-    train_path_A = data_path_A[train_index]
-    train_path_B = data_path_B[train_index]
-
-    val_path_A = data_path_A[val_index]
-    val_path_B = data_path_B[val_index]
-
-    return train_path_A, train_path_B, val_path_A, val_path_B, num_train_batch
-
 def train(opt, train_dataloader, val_dataloader, num_train_batch, model):
     tsboard_writer = SummaryWriter('runs/' + opt.name)
 
@@ -142,6 +97,53 @@ def train(opt, train_dataloader, val_dataloader, num_train_batch, model):
         model.update_learning_rate()                     # update learning rates at the end of every epoch.
 
     return 0
+
+# split validation dataset
+
+def splitData(num_val_batch, batch_size, data_path_A, data_path_B, validation_file):
+    if data_path_A.shape[0] < data_path_B.shape[0]:
+        num_data = data_path_A.shape[0]
+    else:
+        num_data = data_path_B.shape[0]
+
+    num_val_data = num_val_batch * batch_size
+    num_train_data = num_data - num_val_data
+
+    val_index = random.sample(range(0, num_data), num_val_data)
+    train_index = list(set(range(0, num_data)) - set(val_index))
+
+    num_train_batch = int(len(train_index) / batch_size)
+
+    train_path_A = data_path_A[train_index]
+    train_path_B = data_path_B[train_index]
+
+    val_path_A = data_path_A[val_index]
+    val_path_B = data_path_B[val_index]
+
+    val_index = np.array(val_index)
+    np.save(validation_file, val_index)
+
+    return train_path_A, train_path_B, val_path_A, val_path_B, num_train_batch
+
+def resplitData(batch_size, data_path_A, data_path_B, validation_file):
+    if data_path_A.shape[0] < data_path_B.shape[0]:
+        num_data = data_path_A.shape[0]
+    else:
+        num_data = data_path_B.shape[0]
+
+    val_index = np.load(validation_file)
+    val_index = list(val_index)
+    train_index = list(set(range(0, num_data)) - set(val_index))
+
+    num_train_batch = int(len(train_index) / batch_size)
+
+    train_path_A = data_path_A[train_index]
+    train_path_B = data_path_B[train_index]
+
+    val_path_A = data_path_A[val_index]
+    val_path_B = data_path_B[val_index]
+
+    return train_path_A, train_path_B, val_path_A, val_path_B, num_train_batch
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()

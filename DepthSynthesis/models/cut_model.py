@@ -28,7 +28,7 @@ class CUTModel(BaseModel):
                             type=utils.str2bool, nargs='?', const=True, default=False,
                             help='(used for single image translation) If True, include the negatives from the other samples of the minibatch when computing the contrastive loss. Please see models/patchnce.py for more details.')
         parser.add_argument('--netF', type=str, default='mlp_sample', choices=['sample', 'reshape', 'mlp_sample'], help='how to downsample the feature map')
-        parser.add_argument('--netF_nc', type=int, default=256)
+        parser.add_argument('--netF_nc', type=int, default=128)
         parser.add_argument('--nce_T', type=float, default=0.07, help='temperature for NCE loss')
         parser.add_argument('--num_patches', type=int, default=256, help='number of patches per layer')
 
@@ -65,13 +65,8 @@ class CUTModel(BaseModel):
             self.loss_names += ['NCE_Y']
             self.visual_names += ['idt_B']
 
-        if hasattr(opt, 'is_sim_vis'):
-            self.visual_names += ['sim_maps_input', 'sim_maps_output']
-
         if self.isTrain:
             self.model_names = ['G', 'F', 'D']
-        elif hasattr(self.opt, 'is_sim_vis'):
-            self.model_names = ['G', 'F']
         else:  # during test time, only load G
             self.model_names = ['G']
 
@@ -112,19 +107,6 @@ class CUTModel(BaseModel):
             if self.opt.lambda_NCE > 0.0:
                 self.optimizer_F = torch.optim.Adam(self.netF.parameters(), lr=self.opt.lr, betas=(self.opt.beta1, self.opt.beta2))
                 self.optimizers.append(self.optimizer_F)
-        
-    def data_dependent_initialize_sim_vis(self, data):
-        """
-        The feature network netF is defined in terms of the shape of the intermediate, extracted
-        features of the encoder portion of netG. Because of this, the weights of netF are
-        initialized at the first feedforward pass with some input images.
-        Please also see PatchSampleF.create_mlp(), which is called at the first forward() call.
-        """
-        self.set_test_input(data)
-        bs_per_gpu = self.real_A.size(0) // max(len(self.opt.gpu_ids), 1)
-        temp_real_A = self.real_A[:bs_per_gpu]
-        feat_q = self.netG(temp_real_A, self.nce_layers, encode_only=True)
-        _ = self.netF(feat_q)
 
     def optimize_parameters(self):
         # forward
@@ -170,12 +152,6 @@ class CUTModel(BaseModel):
 
         if self.opt.nce_idt and self.isTrain:
             self.idt_B = self.fake[self.real_A.size(0):]
-
-        if hasattr(self.opt, 'is_sim_vis'):
-            feat_i = self.netG(self.real, self.nce_layers, encode_only=True)
-            self.sim_maps_input = self.netF(feat_i, self.opt.query_index)
-            feat_o = self.netG(self.fake, self.nce_layers, encode_only=True)
-            self.sim_maps_output = self.netF(feat_o, self.opt.query_index)
 
     def compute_D_loss(self):
         """Calculate GAN loss for the discriminator"""

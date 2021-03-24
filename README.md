@@ -9,4 +9,4 @@ We provide our PyTorch implementaion of paper 'Differential Contrastive Learning
 - NVIDIA GPU, CUDA and CuDNN
 
 ### Acknowledgments
-Our code is developed based on [contrastive-unpaired-translation](https://github.com/taesungp/contrastive-unpaired-translation).
+Our code is developed based on [contrastive-unpaired-translation](https://github.com/taesungp/contrastive-unpaired-translation). We also thank [Synchronized-BatchNorm-PyTorch](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix) for synchronized batchnorm implementation.

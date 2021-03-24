@@ -39,7 +39,10 @@ class ImageTaskDataset(data.Dataset):
         rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)
 
         if self.opt.zoom_out_scale != 1:
-            rgb_img = cv2.resize(rgb_img, (self.opt.fixed_scale, self.opt.fixed_scale), interpolation=cv2.INTER_AREA)
+            if self.opt.zoom_out_scale == 0:
+                rgb_img = cv2.resize(rgb_img, (self.opt.fixed_size, self.opt.fixed_size), interpolation=cv2.INTER_AREA)
+            else:
+                rgb_img = cv2.resize(rgb_img, (int(rgb_img.shape[1] / self.opt.zoom_out_scale), int(rgb_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_AREA)
 
         rgb_img = np.array(rgb_img).astype(np.float32)
 
@@ -65,7 +68,6 @@ class ImageTaskDataset(data.Dataset):
         else:
             return data.DataLoader(dataset=self, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, pin_memory=True, drop_last=False)
     
-
 class DepthDataset(data.Dataset):
     def __init__(self, opt, data_path_clean, data_path_noise=None):
         super(DepthDataset).__init__()
@@ -242,6 +244,3 @@ def datapathPrepare(opt):
         print('Number of B images: ', len(file_list_B))
         file_path_B = preDataPathImageTask(opt.data_path_image + opt.dataset + '/trainB/', file_list_B)
         saveH5(file_path_B, opt.data_path_h5, 'DataPath' + opt.dataset + 'B.h5')
-
-if __name__ == '__main__':
-    datapathPrepare(None)
