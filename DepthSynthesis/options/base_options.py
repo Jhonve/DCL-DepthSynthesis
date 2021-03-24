@@ -21,8 +21,8 @@ class BaseOptions():
     def initialize(self, parser):
         """Define the common options that are used in both training and test."""
         # basic parameters
-        # parser.add_argument('--name', type=str, default='depthsynthesis', help='name of the experiment. It decides where to store samples and models')
-        parser.add_argument('--name', type=str, default='DebugTest', help='name of the experiment. It decides where to store samples and models')
+        parser.add_argument('--name', type=str, default='depthsynthesis', help='name of the experiment. It decides where to store samples and models')
+        # parser.add_argument('--name', type=str, default='DebugTest', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--gpu_ids', type=str, default='0,1,2,3', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         # model parameters
@@ -32,7 +32,7 @@ class BaseOptions():
         parser.add_argument('--ngf', type=int, default=32, help='# of gen filters in the last conv layer')
         parser.add_argument('--ndf', type=int, default=32, help='# of discrim filters in the first conv layer')
         parser.add_argument('--netD', type=str, default='basic', choices=['basic', 'n_layers', 'pixel', 'patch', 'tilestylegan2', 'stylegan2'], help='specify discriminator architecture. The basic model is a 70x70 PatchGAN. n_layers allows you to specify the layers in the discriminator')
-        parser.add_argument('--netG', type=str, default='resnet_9blocks', choices=['resnet_9blocks', 'resnet_6blocks', 'unet_256', 'unet_128', 'stylegan2', 'smallstylegan2', 'resnet_cat'], help='specify generator architecture')
+        parser.add_argument('--netG', type=str, default='resnet_5blocks', choices=['resnet_9blocks', 'resnet_6blocks', 'unet_256', 'unet_128', 'stylegan2', 'smallstylegan2', 'resnet_cat'], help='specify generator architecture')
         parser.add_argument('--n_layers_D', type=int, default=3, help='only used if netD==n_layers')
         parser.add_argument('--normG', type=str, default='batch', choices=['instance', 'batch', 'none'], help='instance normalization or batch normalization for G')
         parser.add_argument('--normD', type=str, default='batch', choices=['instance', 'batch', 'none'], help='instance normalization or batch normalization for D')
@@ -52,7 +52,7 @@ class BaseOptions():
         parser.add_argument('--data_path_noise', type=str, default='../../Dataset/ScanNet/', help='Path to ScanNet dataset')
         parser.add_argument('--data_path_image', type=str, default='../../Dataset/ImageTasksDatasets/', help='Path to image task datasets')
         parser.add_argument('--data_path_h5', type=str, default='./datasets/', help='Path to h5 file for saving data pathes')
-        parser.add_argument('--zoom_out_scale', type=int, default=2, help='Doing scaling in the training step, using 0 for image tasks')
+        parser.add_argument('--zoom_out_scale', type=int, default=1, help='Doing scaling in the training step, using 0 for image tasks')
         parser.add_argument('--fixed_size', type=int, default=256, help='The fixed size in the training step, when setting \'zoom_out_scale == 0\'')
         parser.add_argument('--data_path_file_clean', type=str, default='./datasets/DataPathClean.h5', help='H5 file saved clean data path')
         parser.add_argument('--data_path_file_noise', type=str, default='./datasets/DataPathNoise.h5', help='H5 file saved noise data path')
