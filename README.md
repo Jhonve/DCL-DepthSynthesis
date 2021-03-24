@@ -67,11 +67,11 @@ python evaluation_demo.py --name monet2photo --dataset monet2photo --input_nc 3 
 
 CycleGAN, CUT and Coupled are previous works.
 
-<img src="imgs/depth_synthesis.jpg" width="800px"/>
+<img src="Imgs/depth_synthesis.jpg" width="800px"/>
 
 ### RGB image translation
 
-<img src="imgs/image_translation.png" width="800px"/>
+<img src="Imgs/image_translation.png" width="800px"/>
 
 ## Acknowledgments
 
