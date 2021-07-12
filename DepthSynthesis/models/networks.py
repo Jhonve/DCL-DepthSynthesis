@@ -652,6 +652,81 @@ class G_Resnet(nn.Module):
 ##################################################################################
 # Encoder and Decoders
 ##################################################################################
+class E_adaIN(nn.Module):
+    def __init__(self, input_nc, output_nc=1, nef=64, n_layers=4,
+                 norm=None, nl_layer=None, vae=False):
+        # style encoder
+        super(E_adaIN, self).__init__()
+        self.enc_style = StyleEncoder(n_layers, input_nc, nef, output_nc, norm='none', activ='relu', vae=vae)
+
+    def forward(self, image):
+        style = self.enc_style(image)
+        return style
+
+
+class StyleEncoder(nn.Module):
+    def __init__(self, n_downsample, input_dim, dim, style_dim, norm, activ, vae=False):
+        super(StyleEncoder, self).__init__()
+        self.vae = vae
+        self.model = []
+        self.model += [Conv2dBlock(input_dim, dim, 7, 1, 3, norm=norm, activation=activ, pad_type='reflect')]
+        for i in range(2):
+            self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1, norm=norm, activation=activ, pad_type='reflect')]
+            dim *= 2
+        for i in range(n_downsample - 2):
+            self.model += [Conv2dBlock(dim, dim, 4, 2, 1, norm=norm, activation=activ, pad_type='reflect')]
+        self.model += [nn.AdaptiveAvgPool2d(1)]  # global average pooling
+        if self.vae:
+            self.fc_mean = nn.Linear(dim, style_dim)  # , 1, 1, 0)
+            self.fc_var = nn.Linear(dim, style_dim)  # , 1, 1, 0)
+        else:
+            self.model += [nn.Conv2d(dim, style_dim, 1, 1, 0)]
+
+        self.model = nn.Sequential(*self.model)
+        self.output_dim = dim
+
+    def forward(self, x):
+        if self.vae:
+            output = self.model(x)
+            output = output.view(x.size(0), -1)
+            output_mean = self.fc_mean(output)
+            output_var = self.fc_var(output)
+            return output_mean, output_var
+        else:
+            return self.model(x).view(x.size(0), -1)
+
+
+class ContentEncoder(nn.Module):
+    def __init__(self, n_downsample, n_res, input_dim, dim, norm, activ, pad_type='zero'):
+        super(ContentEncoder, self).__init__()
+        self.model = []
+        self.model += [Conv2dBlock(input_dim, dim, 7, 1, 3, norm=norm, activation=activ, pad_type='reflect')]
+        # downsampling blocks
+        for i in range(n_downsample):
+            self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1, norm=norm, activation=activ, pad_type='reflect')]
+            dim *= 2
+        # residual blocks
+        self.model += [ResBlocks(n_res, dim, norm=norm, activation=activ, pad_type=pad_type)]
+        self.model = nn.Sequential(*self.model)
+        self.output_dim = dim
+
+    def forward(self, x, nce_layers=[], encode_only=False):
+        if len(nce_layers) > 0:
+            feat = x
+            feats = []
+            for layer_id, layer in enumerate(self.model):
+                feat = layer(feat)
+                if layer_id in nce_layers:
+                    feats.append(feat)
+                if layer_id == nce_layers[-1] and encode_only:
+                    return None, feats
+            return feat, feats
+        else:
+            return self.model(x), None
+
+        for layer_id, layer in enumerate(self.model):
+            print(layer_id, layer)
+
 class Decoder_all(nn.Module):
     def __init__(self, n_upsample, n_res, dim, output_dim, norm='batch', activ='relu', pad_type='zero', nz=0):
         super(Decoder_all, self).__init__()
