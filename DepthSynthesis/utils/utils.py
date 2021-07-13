@@ -1,7 +1,7 @@
-import torch
-import numpy as np
 import os
 import random
+import argparse
+import torch
 
 class ImagePool():
     """This class implements an image buffer that stores previously generated images.
