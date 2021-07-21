@@ -51,13 +51,13 @@ def test(opt, test_dataloader, num_test_batch, model):
         B_results = vis_res['fake_B']
 
         # A_inputs = A_inputs.permute(0, 2, 3, 1)
-        # if opt.dataset == 'depthsynthesis':
+        # if 'depthsynthesis' in opt.dataset:
         #     A_inputs = A_inputs.detach().cpu().numpy()[:, :, :, 0]
         # else:
         #     A_inputs = A_inputs.detach().cpu().numpy()
 
         B_results = B_results.permute(0, 2, 3, 1)
-        if opt.dataset == 'depthsynthesis':
+        if 'depthsynthesis' in opt.dataset:
             B_results = B_results.detach().cpu().numpy()[:, :, :, 0]
         else:
             B_results = B_results.detach().cpu().numpy()
@@ -69,7 +69,7 @@ def test(opt, test_dataloader, num_test_batch, model):
             B_result = B_results[i_batch]
             B_result = B_result * 255.
 
-            if not opt.dataset == 'depthsynthesis':
+            if not 'depthsynthesis' in opt.dataset:
                 B_result = cv2.cvtColor(B_result, cv2.COLOR_RGB2BGR)
 
             res_path = opt.test_dir + opt.dataset + '/res_' + vis_path.split('/')[-1].split('.')[0] + '_' + opt.model + '.png'
@@ -91,7 +91,7 @@ def test(opt, test_dataloader, num_test_batch, model):
 if __name__ == "__main__":
     opt = TestOptions().parse()
 
-    if opt.dataset == 'depthsynthesis':
+    if 'depthsynthesis' in opt.dataset:
         data_path_A_list = h5py.File(opt.data_path_file_A, 'r')
         data_path_A = np.array(data_path_A_list['data_path'])
     else:
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     if not os.path.exists(opt.test_dir):
         os.makedirs(opt.test_dir)
 
-    if opt.dataset == 'depthsynthesis':
+    if 'depthsynthesis' in opt.dataset:
         test_dataset = DepthDataset(opt, data_path_A)
     else:
         test_dataset = ImageTaskDataset(opt, data_path_A)

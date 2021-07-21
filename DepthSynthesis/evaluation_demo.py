@@ -35,7 +35,7 @@ def evaluation(opt, inputs_list, inputs_path, model):
         B_results = vis_res['fake_B']
 
         B_results = B_results.permute(0, 2, 3, 1)
-        if opt.dataset == 'depthsynthesis':
+        if 'depthsynthesis' in opt.dataset:
             B_results = B_results.detach().cpu().numpy()[:, :, :, 0]
         else:
             B_results = B_results.detach().cpu().numpy()
@@ -46,7 +46,7 @@ def evaluation(opt, inputs_list, inputs_path, model):
         B_result = B_results[0]
         B_result = B_result * 255.
 
-        if not opt.dataset == 'depthsynthesis':
+        if not 'depthsynthesis' in opt.dataset:
             B_result = cv2.cvtColor(B_result, cv2.COLOR_RGB2BGR)
 
         if not os.path.exists(opt.eval_res_dir):
@@ -122,7 +122,7 @@ def loadRGBImages(opt):
 if __name__ == "__main__":
     opt = TestOptions().parse()
 
-    if opt.dataset == 'depthsynthesis':
+    if 'depthsynthesis' in opt.dataset:
         inputs_list, inputs_path = loadDepthImages(opt)
     else:
         inputs_list, inputs_path = loadRGBImages(opt)

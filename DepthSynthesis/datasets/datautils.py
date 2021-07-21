@@ -206,7 +206,7 @@ def saveH5(files_path, h5_path, target_name='datapath.h5'):
 def datapathPrepare(opt):
     # initialize data path to dataPath.h5
     
-    if opt.dataset == 'depthsynthesis':
+    if 'depthsynthesis' in opt.dataset:
         folder_list_clean = os.listdir(opt.data_path_clean)
         print('Number of clean models: ', len(folder_list_clean))
 

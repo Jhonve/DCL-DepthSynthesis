@@ -161,7 +161,7 @@ if __name__ == '__main__':
     if not os.path.exists(opt.checkpoints_dir + '/' + opt.name):
         os.makedirs(opt.checkpoints_dir + '/' + opt.name)
     
-    if opt.dataset == 'depthsynthesis':
+    if 'depthsynthesis' in opt.dataset:
         data_path_A_list = h5py.File(opt.data_path_file_clean, 'r')
         data_path_B_list = h5py.File(opt.data_path_file_noise, 'r')
         data_path_A = np.array(data_path_A_list['data_path'])
@@ -182,14 +182,14 @@ if __name__ == '__main__':
             splitData(opt.num_val_batch, opt.batch_size, data_path_A, data_path_B, validation_file)
 
     # initialize Dataloader
-    if opt.dataset == 'depthsynthesis':
+    if 'depthsynthesis' in opt.dataset:
         train_dataset = DepthDataset(opt, train_path_A, train_path_B)
     else:
         train_dataset = ImageTaskDataset(opt, train_path_A, train_path_B)
     train_dataloader = train_dataset.getDataloader()
 
     if opt.num_val_batch > 0:
-        if opt.dataset == 'depthsynthesis':
+        if 'depthsynthesis' in opt.dataset:
             val_dataset = DepthDataset(opt, val_path_A, val_path_B)
         else:
             val_dataset = ImageTaskDataset(opt, val_path_A, val_path_B)
