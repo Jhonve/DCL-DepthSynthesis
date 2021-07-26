@@ -9,7 +9,7 @@ import h5py
 import torch
 import numpy as np
 
-from datasets.datautils import DepthDataset, ImageTaskDataset
+from datasets.datautils import DepthDataset, ImageTaskDataset, datapathPrepare
 
 from options.test_options import TestOptions
 
@@ -65,6 +65,8 @@ def test(opt, test_dataloader, num_test_batch, model):
 
         for i_batch in range(len(paths)):
             vis_path = paths[i_batch]
+            if type(vis_path) == bytes:
+                vis_path = vis_path.decode('UTF-8')
 
             B_result = B_results[i_batch]
             B_result = B_result * 255.
@@ -91,8 +93,11 @@ def test(opt, test_dataloader, num_test_batch, model):
 if __name__ == "__main__":
     opt = TestOptions().parse()
 
+    if opt.data_path_prepared == False:
+        datapathPrepare(opt)
+
     if 'depthsynthesis' in opt.dataset:
-        data_path_A_list = h5py.File(opt.data_path_file_A, 'r')
+        data_path_A_list = h5py.File(opt.data_path_file_clean, 'r')
         data_path_A = np.array(data_path_A_list['data_path'])
     else:
         file_list_A = os.listdir(opt.data_path_image + opt.dataset + '/testA/')

@@ -33,7 +33,7 @@ class ImageTaskDataset(data.Dataset):
         return self.SIZE
 
     def loadColorImage(self, data_path):
-        if self.is_train:
+        if type(data_path) == bytes:
             data_path = data_path.decode('UTF-8')
         rgb_img = cv2.imread(data_path)
         rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)
@@ -93,7 +93,7 @@ class DepthDataset(data.Dataset):
         return self.SIZE
 
     def loadRGBDImg(self, data_path):
-        if self.is_train:
+        if type(data_path) == bytes:
             data_path = data_path.decode('UTF-8')
         data_path_depth = data_path.split('|')[0]
         data_path_rgb = data_path.split('|')[1]
@@ -120,7 +120,8 @@ class DepthDataset(data.Dataset):
         return rgbd_img
 
     def loadDepthImg(self, data_path):
-        data_path = data_path.decode('UTF-8')
+        if type(data_path) == bytes:
+            data_path = data_path.decode('UTF-8')
         data_path_depth = data_path.split('|')[0]
         
         depth_img = cv2.imread(data_path_depth, 2)
