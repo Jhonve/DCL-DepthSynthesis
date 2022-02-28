@@ -1,7 +1,7 @@
 # DCL-DepthSynthesis (DCL)
 Unpaired Depth Synthesis Using Differential Contrastive Learning 
 
-We provide our PyTorch implementation of the paper **'Differential Contrastive Learning for Geometry-Aware Depth Synthesis.'** By proposed differential contrastive learning, our method can generate geometry-preserved depth maps comparing to previous methods.
+We provide our PyTorch implementation of our paper **['DCL: Differential Contrastive Learning for Geometry-Aware Depth Synthesis'](https://arxiv.org/pdf/2107.13087.pdf)** (RA-L & ICRA 2022). By proposed differential contrastive learning, our method can generate geometry-preserved depth maps comparing to previous methods.
 
 <img src="Imgs/DCL.jpg" width="800px"/>
 
@@ -72,6 +72,22 @@ CycleGAN, CUT and Coupled are previous works.
 ### RGB image translation
 
 <img src="Imgs/image_translation.png" width="800px"/>
+
+### Citation
+
+If you find this useful for your research, please cite the following paper.
+
+```
+@inproceedings{shen2022dcl,
+  title={DCL: Differential Contrastive Learning for Geometry-Aware Depth Synthesis},
+  author={Shen, yuefan and Yang, Yanchao and Zheng, Youyi and Liu, C. Karen and Guibas, Leonidas J.},
+  journal={Proc. IEEE Int. Conf. Robot. Automat.},
+  pages={},
+  year={2022}
+}
+```
+
+Waiting for updating...
 
 ## Acknowledgments
 
