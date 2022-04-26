@@ -41,7 +41,7 @@ python evaluation_demo.py --name monet2photo --dataset monet2photo --input_nc 3 
 
 1. For depth enhancement, normal prediction and semantic segmentation tasks, download [InteriorNet](https://interiornet.org/) and [ScanNet](http://www.scan-net.org/) datasets. For poes estimation and grasping prediction tasks, download [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) and [GraspNet](https://graspnet.net/) datasets.
 
-2. Extract depth and rgb frames from [InteriorNet](https://interiornet.org/) and [ScanNet](http://www.scan-net.org/) datasets.
+2. Extract depth and rgb frames from [InteriorNet](https://interiornet.org/) or [ScanNet](http://www.scan-net.org/) datasets.
 
 3. Start training [InteriorNet](https://interiornet.org/) to [ScanNet](http://www.scan-net.org/).
 
