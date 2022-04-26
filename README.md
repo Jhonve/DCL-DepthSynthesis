@@ -28,7 +28,7 @@ cd DepthSynthesis
 python evaluation_demo.py
 ```
 
-### Evaluation on depth synthesis
+### Evaluation on RGB synthesis
 
 We provide our pre-trained checkpoints for *Monet-to-photo* translation and sampled some data for evaluation. The outputs can be found in ./DepthSynthesis/datasets/eval_outputs/
 
@@ -39,16 +39,20 @@ python evaluation_demo.py --name monet2photo --dataset monet2photo --input_nc 3 
 
 ### Training on depth synthesis
 
-1. Download [InteriorNet](https://interiornet.org/) and [ScanNet](http://www.scan-net.org/) datasets.
+1. For depth enhancement, normal prediction and semantic segmentation tasks, download [InteriorNet](https://interiornet.org/) and [ScanNet](http://www.scan-net.org/) datasets. For poes estimation and grasping prediction tasks, download [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) and [GraspNet](https://graspnet.net/) datasets.
 
-2. Extract depth and rgb frames from two datasets.
+2. Extract depth and rgb frames from [InteriorNet](https://interiornet.org/) and [ScanNet](http://www.scan-net.org/) datasets.
 
-3. Start training
+3. Start training [InteriorNet](https://interiornet.org/) to [ScanNet](http://www.scan-net.org/).
 
    ```shell
    cd DepthSynthesis
    python train.py --dataset depthsynthesis --data_path_clean $your_path_to_interiornet --data_path_noise $your_path_to_scannet
    ```
+
+4. Render synthetic depth maps from [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) and [GraspNet](https://graspnet.net/) datasets. Please refer to my repo [ObjsDepthRender](https://github.com/Jhonve/ObjsDepthRender).
+
+5. Start training depth synthesis for [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) dataset or [GraspNet](https://graspnet.net/) dataset. Waiting for updating...
 
 ### Training on RGB image translation
 
