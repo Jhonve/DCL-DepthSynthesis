@@ -44,7 +44,7 @@ class BaseOptions():
         parser.add_argument('--no_antialias', action='store_true', help='if specified, use stride=2 convs instead of antialiased-downsampling (sad)')
         parser.add_argument('--no_antialias_up', action='store_true', help='if specified, use [upconv(learned filter)] instead of [upconv(hard-coded [1,3,3,1] filter), conv]')
         # dataset parameters
-        parser.add_argument('--dataset', type=str, default='depthsynthesis', choices=['depthsynthesis', 'horse2zebra', 'apple2orange', 'summer2winter_yosemite', 'monet2photo'], help='choose whihc dataset to train.')
+        parser.add_argument('--dataset', type=str, default='LMdepthsynthesis', choices=['LMdepthsynthesis', 'IN2SNdepthsynthesis', 'S2Rdepthsynthesis', 'S2Kdepthsynthesis', 'horse2zebra', 'apple2orange', 'summer2winter_yosemite', 'monet2photo'], help='choose whihc dataset to train.')
         parser.add_argument('--data_path_prepared', type=bool, default=False, help='Wherether to generate depth path file.')
         parser.add_argument('--num_threads', default=8, type=int, help='# threads for loading data')
         parser.add_argument('--batch_size', type=int, default=12, help='input batch size')
@@ -61,8 +61,11 @@ class BaseOptions():
         parser.add_argument('--epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
         parser.add_argument('--verbose', action='store_true', help='if specified, print more debugging information')
         parser.add_argument('--suffix', default='', type=str, help='customized suffix: opt.name = opt.name + suffix: e.g., {model}_{netG}_size{load_size}')
-        # netwoek parameters for depth synthesis
+        # netwoek parameters for depth synthesis on interiornet2scannet
         parser.add_argument('--use_rgb', type=bool, default=True, help='if specified, print more debugging information')
+        # parameters for LineMod and GraspNet datasets
+        parser.add_argument('--rm_bkgd', type=bool, default=False, help='whether to remove background')
+        parser.add_argument('--is_crop', type=bool, default=False, help='whether to crop depth')
 
         self.initialized = True
         return parser

@@ -47,12 +47,21 @@ python evaluation_demo.py --name monet2photo --dataset monet2photo --input_nc 3 
 
    ```shell
    cd DepthSynthesis
-   python train.py --dataset depthsynthesis --data_path_clean $your_path_to_interiornet --data_path_noise $your_path_to_scannet
+   python train.py --dataset IN2SNdepthsynthesis --data_path_clean $your_path_to_interiornet --data_path_noise $your_path_to_scannet
    ```
 
 4. Render synthetic depth maps from [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) and [GraspNet](https://graspnet.net/) datasets. Please refer to my repo [ObjsDepthRender](https://github.com/Jhonve/ObjsDepthRender).
 
-5. Start training depth synthesis for [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) dataset or [GraspNet](https://graspnet.net/) dataset. Waiting for updating...
+5. Start training depth synthesis for [preprocessed LineMOD](https://drive.google.com/drive/folders/19ivHpaKm9dOrr12fzC8IDFczWRPFxho7) dataset or [GraspNet](https://graspnet.net/) dataset.
+   ```shell
+   cd DepthSynthesis
+
+   # train on preprocessed LineMOD
+   python train.py --dataset LMdepthsynthesis --data_path_clean $your_path_to_synthetic_linemod --data_path_noise $your_path_to_linemod --is_crop True
+
+   # train on GraspNet (Realsense camera)
+   python train.py --dataset S2Rdepthsynthesis --data_path_clean $your_path_to_synthetic_graspnet --data_path_noise $your_path_to_graspnet
+   ```
 
 ### Training on RGB image translation
 

@@ -1,6 +1,9 @@
 import os
 import random
 import argparse
+
+import cv2
+import numpy as np
 import torch
 
 class ImagePool():
@@ -86,3 +89,92 @@ def mkdir(path):
     """
     if not os.path.exists(path):
         os.makedirs(path)
+
+def label_processing(label_path):
+    label = cv2.imread(label_path)
+    label_max = np.max(label)
+
+    if label_max == 255: # is rendered synthetic label
+        label = label[:, :, 0]
+        background_mask = (label >= 90) # there are 88 models in total, reduce rasterization error
+    else:
+        label = cv2.imread(label_path, cv2.IMREAD_GRAYSCALE)
+        background_mask = (label <= 0)
+
+    return background_mask
+
+def lable_cropping(label_path, label_id, bias=8):
+    label_img = cv2.imread(label_path)
+    h = label_img.shape[0]
+    w = label_img.shape[1]
+
+    idx_h, idx_w, _ = np.where(label_img == label_id + 1)
+
+    if idx_h.shape[0] == 0: # no such label
+        up = int((h / 2) - 128)
+        down = int((h / 2) + 128)
+        left = int((w / 2) - 128)
+        right = int((w / 2) + 128)
+        return up, down, left, right
+
+    up = np.min(idx_h) - bias
+    down = np.max(idx_h) + bias
+    left = np.min(idx_w) - bias
+    right = np.max(idx_w) + bias
+
+    if right - left >= down - up:
+        mid_h = (up + down) / 2
+        len = right - left
+        up = int(mid_h - (len / 2))
+        down = int(mid_h + (len / 2))
+
+        # check bbox
+        if up < 0:
+            up = 0
+            down = up + len
+        elif down >= h:
+            down = h - 1
+            up = down - len
+
+        if left < 0:
+            left = 0
+            right = left + len
+        elif right >= w:
+            right = w - 1
+            left = right - len
+    else:
+        mid_w = (left + right) / 2
+        len = down - up
+        left = int(mid_w - (len / 2))
+        right = int(mid_w + (len / 2))
+
+        # check bbox
+        if up < 0:
+            up = 0
+            down = up + len
+        elif down >= h:
+            down = h - 1
+            up = down - len
+
+        if left < 0:
+            left = 0
+            right = left + len
+        elif right >= w:
+            right = w - 1
+            left = right - len
+
+    return up, down, left, right
+
+def label_processing_cropping(label_path, label_id, bias=8):
+    label_img = cv2.imread(label_path)
+    h = label_img.shape[0]
+    w = label_img.shape[1]
+
+    bg_h, bh_w, _ = np.where(label_img == 0)
+    if bg_h.shape[0] >= 16:
+        # is real mask
+        up, down, left, right = lable_cropping(label_path, label_id=254)
+    else:
+        up, down, left, right = lable_cropping(label_path, label_id * 3 - 1)
+
+    return up, down, left, right

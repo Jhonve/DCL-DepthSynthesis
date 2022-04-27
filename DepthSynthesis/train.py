@@ -7,7 +7,7 @@ import h5py
 import torch
 import numpy as np
 
-from datasets.datautils import datapathPrepare
+from datasets.datautils import datapathPrepare, datafiltering, datasampleshuffling
 from datasets.datautils import DepthDataset, ImageTaskDataset
 
 from options.train_options import TrainOptions
@@ -150,6 +150,9 @@ if __name__ == '__main__':
 
     if opt.data_path_prepared == False:
         datapathPrepare(opt)
+        if 'LM' in opt.dataset or 'S2R' in opt.dataset or 'S2K' in opt.dataset:
+            datafiltering(opt, opt.data_path_file_clean)
+            datasampleshuffling(opt)
 
     if not os.path.exists(opt.validation_dir):
         os.makedirs(opt.validation_dir)

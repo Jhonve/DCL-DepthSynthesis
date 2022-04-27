@@ -4,9 +4,12 @@ import random
 import numpy as np
 import h5py
 import cv2
+from tqdm import tqdm
 
 import torch
 import torch.utils.data as data
+
+from utils.utils import label_processing, lable_cropping, label_processing_cropping
 
 class ImageTaskDataset(data.Dataset):
     def __init__(self, opt, data_paths_A, data_paths_B=None):
@@ -101,8 +104,28 @@ class DepthDataset(data.Dataset):
         depth_img = cv2.imread(data_path_depth, 2)
         rgb_img = cv2.imread(data_path_rgb)
 
+        if self.opt.rm_bkgd:
+            data_path_label = data_path.split('|')[2]
+            background_mask = label_processing(data_path_label)
+            depth_img[background_mask] = 0
+
+        if self.opt.is_crop:
+            data_path_label = data_path.split('|')[2]
+            label_id = int(data_path.split('|')[3])
+
+            if 'LM' in self.opt.dataset:
+                up, down, left, right = label_processing_cropping(data_path_label, label_id)
+            else:
+                up, down, left, right = lable_cropping(data_path_label, label_id)
+
+            depth_img = depth_img[up:down, left:right]
+            rgb_img = rgb_img[up:down, left:right]
+
         if self.opt.zoom_out_scale != 1:
-            depth_img = cv2.resize(depth_img, (int(depth_img.shape[1] / self.opt.zoom_out_scale), int(depth_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_NEAREST)
+            if self.opt.zoom_out_scale == 0:
+                depth_img = cv2.resize(depth_img, (self.opt.fixed_size, self.opt.fixed_size), interpolation=cv2.INTER_NEAREST)
+            else:
+                depth_img = cv2.resize(depth_img, (int(depth_img.shape[1] / self.opt.zoom_out_scale), int(depth_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_NEAREST)
         depth_img = np.array(depth_img).astype(np.float32)
 
         depth_max = np.max(depth_img)
@@ -126,8 +149,27 @@ class DepthDataset(data.Dataset):
         
         depth_img = cv2.imread(data_path_depth, 2)
 
+        if self.opt.rm_bkgd:
+            data_path_label = data_path.split('|')[2]
+            background_mask = label_processing(data_path_label)
+            depth_img[background_mask] = 0
+
+        if self.opt.is_crop:
+            data_path_label = data_path.split('|')[2]
+            label_id = int(data_path.split('|')[3])
+
+            if 'LM' in self.opt.dataset:
+                up, down, left, right = label_processing_cropping(data_path_label, label_id)
+            else:
+                up, down, left, right = lable_cropping(data_path_label, label_id)
+
+            depth_img = depth_img[up:down, left:right]
+
         if self.opt.zoom_out_scale != 1:
-            depth_img = cv2.resize(depth_img, (int(depth_img.shape[1] / self.opt.zoom_out_scale), int(depth_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_NEAREST)
+            if self.opt.zoom_out_scale == 0:
+                depth_img = cv2.resize(depth_img, (self.opt.fixed_size, self.opt.fixed_size), interpolation=cv2.INTER_NEAREST)
+            else:
+                depth_img = cv2.resize(depth_img, (int(depth_img.shape[1] / self.opt.zoom_out_scale), int(depth_img.shape[0] / self.opt.zoom_out_scale)), interpolation=cv2.INTER_NEAREST)
         depth_img = np.array(depth_img).astype(np.float32)
         
         depth_max = np.max(depth_img)
@@ -185,6 +227,144 @@ def preDataPathScanNet(data_path, folder_list):
     
     return all_file_list
 
+def preDataPathKinectRealSense(data_path, folder_list, mode='/kinect', rm_bkgd=True, is_crop=True):
+    all_file_list = []
+    for i in range(len(folder_list)):
+        if is_crop:
+            obj_id_list_file = open(data_path + folder_list[i] + '/object_id_list.txt', 'r')
+            obj_id_list = []
+            for line in obj_id_list_file:
+                obj_id_list.append(int(line))
+
+        file_list_depth = os.listdir(data_path + folder_list[i] + mode +'/depth/')
+        for j in range(len(file_list_depth)):
+            file_rgb = data_path + folder_list[i] + mode + '/rgb/' + file_list_depth[j]
+            file_depth = data_path + folder_list[i] + mode + '/depth/' + file_list_depth[j]
+            if rm_bkgd or is_crop:
+                file_label = data_path + folder_list[i] + mode + '/label/' + file_list_depth[j]
+                paired_file_name = file_depth + '|' + file_rgb + '|' + file_label
+            else:
+                paired_file_name = file_depth + '|' + file_rgb
+
+            if is_crop:
+                for k in range(len(obj_id_list)):
+                    all_file_list.append(paired_file_name + '|' + str(obj_id_list[k]))
+            else:
+                all_file_list.append(paired_file_name)
+    
+    return all_file_list
+
+def preDataPathSynthetic(data_path, folder_list, mode='/kinect', rm_bkgd=True, is_crop=True, list_path=''):
+    all_file_list = []
+    for i in range(len(folder_list)):
+        if is_crop:
+            obj_id_list_file = open(list_path + folder_list[i] + '/object_id_list.txt', 'r')
+            obj_id_list = []
+            for line in obj_id_list_file:
+                obj_id_list.append(int(line))
+
+        file_list_depth = os.listdir(data_path + folder_list[i] + mode +'/synthetic_res/')
+        for j in range(len(file_list_depth)):
+            if 'depth' in file_list_depth[j]:
+                file_rgb = data_path + folder_list[i] + mode + '/synthetic_res/' + file_list_depth[j].split('_')[0] + '_rgb.png'
+                file_depth = data_path + folder_list[i] + mode + '/synthetic_res/' + file_list_depth[j]
+                if rm_bkgd or is_crop:
+                    file_label = data_path + folder_list[i] + mode + '/synthetic_res/' + file_list_depth[j].split('_')[0] + '_label.png'
+                    paired_file_name = file_depth + '|' + file_rgb + '|' + file_label
+                else:
+                    paired_file_name = file_depth + '|' + file_rgb
+                
+                if is_crop:
+                    for k in range(len(obj_id_list)):
+                        all_file_list.append(paired_file_name + '|' + str(obj_id_list[k]))
+                else:
+                    all_file_list.append(paired_file_name)
+    
+    return all_file_list
+
+def preDataPathLMReal(data_path, folder_list, rm_bkgd=True, is_crop=True):
+    import yaml
+    all_file_list = []
+    for i in range(len(folder_list)):
+        # if is_crop:
+        #     label_info_path = data_path + folder_list[i] + '/gt.yml'
+        #     with open(label_info_path, 'r') as label_info_yaml:
+        #         label_info = yaml.safe_load(label_info_yaml)
+
+        file_list_depth = os.listdir(data_path + folder_list[i] +'/depth/')
+        for j in range(len(file_list_depth)):
+            file_rgb = data_path + folder_list[i] + '/rgb/' + file_list_depth[j]
+            file_depth = data_path + folder_list[i] + '/depth/' + file_list_depth[j]
+            if rm_bkgd or is_crop:
+                file_label = data_path + folder_list[i] + '/mask/' + file_list_depth[j]
+                paired_file_name = file_depth + '|' + file_rgb + '|' + file_label
+            else:
+                paired_file_name = file_depth + '|' + file_rgb
+
+            if is_crop:
+                # for all objs
+                # frame_id = int(file_list_depth[j].split('.')[0])
+                # num_objs = len(label_info[frame_id])
+                # for k in range(num_objs):
+                #     mask_size = label_info[frame_id][k]['obj_bb']
+                #     if mask_size[2] < 24 or mask_size[3] < 24:
+                #         continue
+                #     all_file_list.append(paired_file_name + '|' + str(label_info[frame_id][k]['obj_id']))
+                
+                # for single obj
+                all_file_list.append(paired_file_name + '|' + str(int(folder_list[i])))
+            else:
+                all_file_list.append(paired_file_name)
+    
+    return all_file_list
+
+def preDataPathLMSyntheic(data_path, folder_list, rm_bkgd=True, is_crop=True, list_path=''):
+    import yaml
+    all_file_list = []
+    for i in range(len(folder_list)):
+        # if is_crop:
+        #     label_info_path = list_path + folder_list[i] + '/gt.yml'
+        #     with open(label_info_path, 'r') as label_info_yaml:
+        #         label_info = yaml.safe_load(label_info_yaml)
+
+        file_list_depth = os.listdir(data_path + folder_list[i])
+        for j in range(len(file_list_depth)):
+            if 'depth' in file_list_depth[j]:
+                file_rgb = data_path + folder_list[i] + '/' + file_list_depth[j].split('_')[0] + '_rgb.png'
+                file_depth = data_path + folder_list[i] + '/' + file_list_depth[j]
+                if rm_bkgd or is_crop:
+                    file_label = data_path + folder_list[i] + '/' + file_list_depth[j].split('_')[0] + '_label.png'
+                    paired_file_name = file_depth + '|' + file_rgb + '|' + file_label
+                else:
+                    paired_file_name = file_depth + '|' + file_rgb
+                
+                depth_temp = cv2.imread(file_depth, 2)
+                up, down, left, right = label_processing_cropping(file_label, int(folder_list[i]))
+                depth_temp = depth_temp[up:down, left:right]
+
+                missing_mask = (depth_temp <= 0)
+                missing_mask = missing_mask.astype(np.int8)
+                all_missing = np.sum(np.sum(missing_mask, 1), 0)
+                if (all_missing >= 8):
+                    continue
+
+                if is_crop:
+                    # for all objs
+                    # frame_id = int(file_list_depth[j].split('.')[0])
+                    # num_objs = len(label_info[frame_id])
+                    # for k in range(num_objs):
+                    #     mask_size = label_info[frame_id][k]['obj_bb']
+                    #     if mask_size[2] < 24 or mask_size[3] < 24:
+                    #         continue
+                    #     all_file_list.append(paired_file_name + '|' + str(label_info[frame_id][k]['obj_id']))
+
+                    # for single obj
+                    all_file_list.append(paired_file_name + '|' + str(int(folder_list[i])))
+                else:
+                    all_file_list.append(paired_file_name)
+    
+    return all_file_list
+
 def preDataPathImageTask(data_path, file_list):
     all_file_list = []
     for i in range(len(file_list)):
@@ -207,9 +387,10 @@ def saveH5(files_path, h5_path, target_name='datapath.h5'):
 def datapathPrepare(opt):
     # initialize data path to dataPath.h5
     
-    if 'depthsynthesis' in opt.dataset:
+    # InterioNet2ScanNet
+    if opt.dataset == 'IN2SNdepthsynthesis':
         folder_list_clean = os.listdir(opt.data_path_clean)
-        print('Number of clean models: ', len(folder_list_clean))
+        print('Number of clean folders: ', len(folder_list_clean))
 
         files_path_clean = preDataPathInterior(opt.data_path_clean, folder_list_clean)
         print('Number of clean data: ', len(files_path_clean))
@@ -219,6 +400,51 @@ def datapathPrepare(opt):
         print('Number of noise folders: ', len(folder_list_noise))
 
         files_path_noise = preDataPathScanNet(opt.data_path_noise, folder_list_noise)
+        print('Number of noise data: ', len(files_path_noise))
+        saveH5(files_path_noise, opt.data_path_h5, 'DataPathNoise.h5')
+    # Synthetic2Kinect
+    elif opt.dataset == 'S2Kdepthsynthesis':
+        folder_list_clean = os.listdir(opt.data_path_clean)
+        print('Number of clean folders: ', len(folder_list_clean))
+
+        files_path_clean = preDataPathSynthetic(opt.data_path_clean, folder_list_clean, mode='/kinect', rm_bkgd=opt.rm_bkgd, is_crop=opt.is_crop, list_path=opt.data_path_noise)
+        print('Number of clean data: ', len(files_path_clean))
+        saveH5(files_path_clean, opt.data_path_h5, 'DataPathClean.h5')
+        
+        folder_list_noise = os.listdir(opt.data_path_noise)
+        print('Number of noise folders: ', len(folder_list_noise))
+
+        files_path_noise = preDataPathKinectRealSense(opt.data_path_noise, folder_list_noise, mode='/kinect', rm_bkgd=opt.rm_bkgd, is_crop=opt.is_crop)
+        print('Number of noise data: ', len(files_path_noise))
+        saveH5(files_path_noise, opt.data_path_h5, 'DataPathNoise.h5')
+    # Synthetic2Realsense
+    elif opt.dataset == 'S2Rdepthsynthesis':
+        folder_list_clean = os.listdir(opt.data_path_clean)
+        print('Number of clean folders: ', len(folder_list_clean))
+
+        files_path_clean = preDataPathSynthetic(opt.data_path_clean, folder_list_clean, mode='/realsense', rm_bkgd=opt.rm_bkgd, is_crop=opt.is_crop, list_path=opt.data_path_noise)
+        print('Number of clean data: ', len(files_path_clean))
+        saveH5(files_path_clean, opt.data_path_h5, 'DataPathClean.h5')
+        
+        folder_list_noise = os.listdir(opt.data_path_noise)
+        print('Number of noise folders: ', len(folder_list_noise))
+
+        files_path_noise = preDataPathKinectRealSense(opt.data_path_noise, folder_list_noise, mode='/realsense', rm_bkgd=opt.rm_bkgd, is_crop=opt.is_crop)
+        print('Number of noise data: ', len(files_path_noise))
+        saveH5(files_path_noise, opt.data_path_h5, 'DataPathNoise.h5')
+    # Synthetic2Real of LineMod
+    elif opt.dataset == 'LMdepthsynthesis':
+        folder_list_clean = os.listdir(opt.data_path_clean)
+        print('Number of clean folders: ', len(folder_list_clean))
+
+        files_path_clean = preDataPathLMSyntheic(opt.data_path_clean, folder_list_clean, rm_bkgd=opt.rm_bkgd, is_crop=opt.is_crop, list_path=opt.data_path_noise)
+        print('Number of clean data: ', len(files_path_clean))
+        saveH5(files_path_clean, opt.data_path_h5, 'DataPathClean.h5')
+        
+        folder_list_noise = os.listdir(opt.data_path_noise)
+        print('Number of noise folders: ', len(folder_list_noise))
+
+        files_path_noise = preDataPathLMReal(opt.data_path_noise, folder_list_noise, rm_bkgd=opt.rm_bkgd, is_crop=opt.is_crop)
         print('Number of noise data: ', len(files_path_noise))
         saveH5(files_path_noise, opt.data_path_h5, 'DataPathNoise.h5')
     else:
@@ -231,3 +457,41 @@ def datapathPrepare(opt):
         print('Number of B images: ', len(file_list_B))
         file_path_B = preDataPathImageTask(opt.data_path_image + opt.dataset + '/trainB/', file_list_B)
         saveH5(file_path_B, opt.data_path_h5, 'DataPath' + opt.dataset + 'B.h5')
+
+def datafiltering(opt, path_file):
+    data_paths_list = h5py.File(path_file, 'r')
+    data_paths = np.array(data_paths_list['data_path'])
+
+    filtered_data_path = []
+    for i in tqdm(range(len(data_paths))):
+        data_path = data_paths[i]
+        if type(data_path) == bytes:
+            data_path = data_path.decode('UTF-8')
+        data_path_depth = data_path.split('|')[0]
+        depth_img = cv2.imread(data_path_depth, 2)
+
+        data_path_label = data_path.split('|')[2]
+        label_id = int(data_path.split('|')[3])
+
+        up, down, left, right = lable_cropping(data_path_label, label_id)
+        depth_img = depth_img[up:down, left:right]
+        if down - up >= 640 or down - up <= 64 or np.max(depth_img) <= 10:
+            continue
+
+        filtered_data_path.append(data_path)
+    
+    print('Number of filtered data: ', len(filtered_data_path))
+    saveH5(filtered_data_path, opt.data_path_h5, 'DataPathFilteredClean.h5')
+
+def datasampleshuffling(opt):
+    clean_data_paths_list = h5py.File(opt.data_path_h5 + 'DataPathFilteredClean.h5', 'r')
+    clean_data_paths = list(clean_data_paths_list['data_path'])
+    random.shuffle(clean_data_paths)
+    clean_data_paths = clean_data_paths[0:25600]
+    saveH5(clean_data_paths, opt.data_path_h5, 'DataPathClean.h5')
+
+    noise_data_paths_list = h5py.File(opt.data_path_h5 + 'DataPathFilteredNoise.h5', 'r')
+    noise_data_paths = list(noise_data_paths_list['data_path'])
+    random.shuffle(noise_data_paths)
+    noise_data_paths = noise_data_paths[0:25600]
+    saveH5(noise_data_paths, opt.data_path_h5, 'DataPathNoise.h5')

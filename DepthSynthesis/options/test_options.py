@@ -19,7 +19,5 @@ class TestOptions(BaseOptions):
         parser.add_argument('--is_write', type=bool, default=True, help='whether to write results')
         parser.add_argument('--test_dir', type=str, default="../../TestRes/ImageTasks/", help='where to save results')
 
-        # To avoid cropping, the load_size should be the same as crop_size
-        parser.set_defaults(load_size=parser.get_default('crop_size'))
         self.isTrain = False
         return parser
